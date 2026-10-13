@@ -1,81 +1,169 @@
 # ReserveX — Travel Booking QA Automation Demo
 
-A portfolio-ready demonstration of a maintainable Playwright + TypeScript test framework for a multi-day travel booking workflow. Includes a local mock web app/API, UI tests, API tests, cross-browser configuration, CI, and defect/test strategy documentation.
+[![Playwright CI](https://github.com/Pradhap17/reservex-playwright-qa-demo/actions/workflows/playwright.yml/badge.svg)](https://github.com/Pradhap17/reservex-playwright-qa-demo/actions/workflows/playwright.yml)
 
-> **Transparency:** ReserveX is the client name from the job description. This is an independent demonstration project, not the client's product and not evidence of testing their systems. Payment and supplier behavior are simulated.
+A portfolio project demonstrating end-to-end UI automation, REST API testing, booking workflow validation, and continuous integration using **Playwright, TypeScript, Node.js, and GitHub Actions**.
 
-## Stack
-- Playwright Test + TypeScript
-- UI and REST API validation
-- Local Node.js mock server (no extra runtime dependency)
-- Chromium, Firefox, WebKit projects
-- HTML report, JUnit output, screenshots, video and traces on failure
-- GitHub Actions CI
+**Project type:** Independent mock travel-booking application  
+**Test framework:** Playwright Test  
+**CI platform:** GitHub Actions  
+**Latest local test result:** 48 passed
 
-## Quick start
-Requirements: Node.js 20+ (Node 22 recommended), npm, Git.
+> **Transparency:** ReserveX is a name used for this independent demonstration. This project is not connected to a real travel company or production booking platform. All bookings, inventory, payment outcomes, cancellations, and refunds are simulated.
+
+## Project Highlights
+
+- UI automation for tour search and booking workflows.
+- REST API validation for booking creation and business rules.
+- Idempotency testing for duplicate submissions and safe retries.
+- Validation of payment failures and cancellation/refund transitions.
+- Inventory availability and guest-count validation.
+- Cross-browser Playwright configuration for Chromium, Firefox, and WebKit.
+- Automated test execution through GitHub Actions.
+- HTML test reports and failure diagnostics supported by Playwright.
+
+## Technology Stack
+
+| Area | Technology |
+|---|---|
+| Language | TypeScript |
+| Automation | Playwright Test |
+| Application | Node.js mock web application and API |
+| API testing | Playwright APIRequestContext |
+| Browsers | Chromium, Firefox, WebKit |
+| CI/CD | GitHub Actions |
+| Reporting | Playwright HTML report |
+
+## Test Coverage
+
+### UI testing
+
+- Search tours and verify displayed results.
+- Validate availability and pricing information.
+- Complete a booking for two guests.
+- Verify booking totals and commission calculations.
+- Handle simulated payment declines.
+- Prevent selection of sold-out tours.
+- Validate booking retry behavior.
+
+### API testing
+
+- API health and tour-search validation.
+- Booking creation and subtotal calculations.
+- Invalid guest-count rejection.
+- Sold-out inventory validation.
+- Required idempotency-key validation.
+- Duplicate booking submission with the same key.
+- Rejection of conflicting requests that reuse an idempotency key.
+- Safe retry after a simulated payment decline.
+- Booking cancellation and refund state transitions.
+
+## Test Results
+
+The enhanced suite completed **48 passing tests in approximately 33 seconds** in a local run.
+
+The local run covered the configured Chromium, Firefox, and WebKit projects. The GitHub Actions workflow also passed for both the initial and enhanced commits.
+
+These results apply to this local mock application and its CI configuration. They are not production test results for a real travel platform.
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 20 or later
+- npm
+- Git
+
+### Installation
+
+Clone the repository:
 
 ```bash
+git clone https://github.com/Pradhap17/reservex-playwright-qa-demo.git
+cd reservex-playwright-qa-demo
 npm install
 npx playwright install
+```
+
+### Run the tests
+
+Run the full suite:
+
+```bash
 npm test
 ```
 
-Playwright starts the local demo server automatically at `http://127.0.0.1:4173`. Open the HTML report after the run:
+Run API tests only:
+
+```bash
+npm run test:api
+```
+
+Run smoke tests:
+
+```bash
+npm run test:smoke
+```
+
+Open the HTML report:
 
 ```bash
 npm run report
 ```
 
-Run only smoke checks or API tests:
+The Playwright configuration starts the local mock application automatically at `http://127.0.0.1:4173` during test execution.
 
-```bash
-npm run test:smoke
-npm run test:api
-```
+## Repository Structure
 
-## Included scenarios
-1. Search tours and verify result details.
-2. Complete a two-guest booking and assert subtotal and commission.
-3. Handle a simulated payment decline.
-4. Prevent selection of sold-out inventory.
-5. Validate API health and tour search.
-6. Reject invalid guest counts and unavailable inventory.
-7. Validate simulated payment failure.
-8. Enforce cancellation-before-refund and verify state transitions.
-
-## Suggested repository layout
 ```text
-.
-├── .github/workflows/playwright.yml
+reservex-playwright-qa-demo/
+├── .github/
+│   └── workflows/
+│       └── playwright.yml
 ├── demo/
-│   ├── public/index.html
+│   ├── public/
+│   │   └── index.html
 │   └── server.js
 ├── docs/
 │   ├── DEFECT_EXAMPLES.md
 │   └── TEST_STRATEGY.md
 ├── tests/
-│   ├── api/booking-api.spec.ts
-│   └── ui/booking.spec.ts
+│   ├── api/
+│   │   └── booking-api.spec.ts
+│   └── ui/
+│       └── booking.spec.ts
 ├── .env.example
+├── .gitignore
 ├── package.json
 ├── playwright.config.ts
 └── tsconfig.json
 ```
 
-## Strong next steps before client presentation
-- Run locally and confirm the suite is green.
-- Push to your GitHub account and include a screenshot of the HTML report.
-- Add a short screen recording showing search → booking → payment decline → API assertions.
-- Be ready to explain test isolation, stable locators, retries, traces, API setup, and why financial calculations are P0.
-- Ask the client for the staging URL, API docs, supported browsers, payment sandbox and supplier/GDS integration contracts before proposing production coverage.
+## CI/CD
 
-## AI-assisted development workflow
-Use Claude Code, Cursor or Copilot to draft a test, then review every selector, assertion, test-data assumption and side effect. Keep AI-generated changes small, run the tests, inspect traces, and never paste credentials, customer information or payment data into an AI tool. Playwright MCP can support browser exploration if installed and authorized, but is not required to run this project.
+GitHub Actions runs the configured Playwright workflow when the repository's workflow triggers are met.
 
-## What this project does not claim
-- No connection to ReserveX, a real GDS or real suppliers.
-- No real payment capture/refund.
-- No live production testing.
-- No Jira integration or real defect discovery.
-- No guarantee that the suite has passed until you run it in your environment.
+[View workflow runs](https://github.com/Pradhap17/reservex-playwright-qa-demo/actions)
+
+## What This Project Demonstrates
+
+- Structured UI and API test design.
+- Validation of business rules and booking state transitions.
+- Handling duplicate requests and retry scenarios.
+- Browser automation and cross-browser execution.
+- Test reporting and CI integration.
+- Documentation of test strategy and example defects.
+
+## Scope and Limitations
+
+- No connection to a real travel booking platform, GDS, or supplier.
+- No real payment processing or refund execution.
+- No production performance testing or live production testing.
+- No real Jira integration.
+- Example defect scenarios are illustrative, not claims of discovered production defects.
+
+## Repository
+
+[View source code on GitHub](https://github.com/Pradhap17/reservex-playwright-qa-demo) · [View CI results](https://github.com/Pradhap17/reservex-playwright-qa-demo/actions)
+
+Created as an independent QA automation portfolio project.
