@@ -28,3 +28,9 @@
 
 ## Important limitations
 This repository uses a deliberately small local mock service. It does not connect to real travel suppliers, a GDS, a payment gateway, production data, or Jira. Payment is simulated; commission rules are illustrative. Before testing a client environment, obtain written authorization, staging credentials and API contracts. Never use real card data.
+
+
+## Idempotency demonstration
+The mock booking endpoint requires an `Idempotency-Key` header. A successful request is stored in process memory; replaying the same key and request returns the original booking, while reusing the key with different booking data returns HTTP 409. Simulated payment declines are not cached, allowing a retry with the same key to succeed. The UI disables the submit button while a request is in flight and preserves the key for retries.
+
+**Production caveat:** the in-memory map is for demonstration only. Production idempotency must be persisted atomically (for example, a database unique constraint/transaction) and coordinated with the payment provider's own idempotency mechanism. This demo does not model concurrent multi-instance servers or real payment side effects.

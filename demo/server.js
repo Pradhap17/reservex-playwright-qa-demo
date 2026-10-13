@@ -10,6 +10,8 @@ const tours = [
   { id: 'TOUR-303', title: 'Alpine Lakes Expedition', destination: 'Canada', days: 5, price: 750, commissionRate: 0.15, available: 0 }
 ];
 const bookings = new Map();
+// Demo-only idempotency store: successful booking requests are replay-safe.
+const idempotencyKeys = new Map();
 
 function json(res, status, data) {
   res.writeHead(status, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
@@ -45,6 +47,18 @@ const server = http.createServer(async (req, res) => {
     try { payload = await body(req); } catch { return json(res, 400, { error: 'Invalid JSON' }); }
     const tour = tours.find(t => t.id === payload.tourId);
     if (!tour) return json(res, 404, { error: 'Tour not found' });
+    const idempotencyKey = req.headers['idempotency-key'];
+    if (!idempotencyKey || typeof idempotencyKey !== 'string' || idempotencyKey.trim().length < 8) {
+      return json(res, 400, { error: 'A valid Idempotency-Key header is required' });
+    }
+    const fingerprint = JSON.stringify({ tourId: payload.tourId, guests: payload.guests, email: payload.email });
+    const prior = idempotencyKeys.get(idempotencyKey);
+    if (prior) {
+      if (prior.fingerprint !== fingerprint) {
+        return json(res, 409, { error: 'Idempotency key was already used with a different booking request' });
+      }
+      return json(res, 200, { ...prior.booking, idempotentReplay: true });
+    }
     const guests = Number(payload.guests);
     if (!Number.isInteger(guests) || guests < 1 || guests > 8) return json(res, 400, { error: 'Guests must be an integer from 1 to 8' });
     if (tour.available < guests) return json(res, 409, { error: 'Insufficient availability' });
@@ -56,6 +70,7 @@ const server = http.createServer(async (req, res) => {
     const commission = Math.round(subtotal * tour.commissionRate * 100) / 100;
     const booking = { bookingId, tourId: tour.id, guests, email: payload.email, subtotal, commission, status: 'CONFIRMED', refundStatus: 'NOT_REQUESTED' };
     bookings.set(bookingId, booking);
+    idempotencyKeys.set(idempotencyKey, { fingerprint, booking });
     return json(res, 201, booking);
   }
   const bookingMatch = url.pathname.match(/^\/api\/bookings\/([^/]+)(?:\/(cancel|refund))?$/);

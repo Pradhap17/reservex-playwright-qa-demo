@@ -15,10 +15,5 @@
     "@playwright/test": "^1.56.0",
     "@types/node": "^22.0.0",
     "typescript": "^5.9.0"
-  },
-  "dependencies": {
-    "install": "^0.13.0",
-    "npx": "^10.2.2",
-    "playwright": "^1.64.0"
   }
 }

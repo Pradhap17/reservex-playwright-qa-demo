@@ -31,6 +31,18 @@ test.describe('ReserveX travel booking UI', () => {
     await expect(page.locator('#message')).toHaveAttribute('data-status', 'error');
   });
 
+  test('allows retry after a declined payment and confirms only on success', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Select tour' }).first().click();
+    await page.getByLabel('Payment scenario').selectOption('decline');
+    await page.getByRole('button', { name: 'Confirm booking' }).click();
+    await expect(page.locator('#message')).toContainText('Payment declined');
+
+    await page.getByLabel('Payment scenario').selectOption('success');
+    await page.getByRole('button', { name: 'Confirm booking' }).click();
+    await expect(page.locator('#message')).toContainText('CONFIRMED');
+  });
+
   test('prevents selection of a sold-out tour', async ({ page }) => {
     await page.goto('/');
     await page.getByLabel('Destination or tour').fill('Canada');

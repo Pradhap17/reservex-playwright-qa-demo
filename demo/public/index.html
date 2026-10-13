@@ -29,6 +29,9 @@ button{background:#087e8b;color:white;border:0;font-weight:700;cursor:pointer}
 </main>
 <script>
 let selected = null;
+// Keep the same key for retries; rotate it only after a successful booking.
+let bookingIdempotencyKey = newKey();
+function newKey(){ return 'rx-demo-' + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(16).slice(2)); }
 const money = n => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2}).format(n);
 async function searchTours(){
  const q=document.querySelector('#destination').value;
@@ -44,11 +47,19 @@ function selectTour(t){selected=t;document.querySelector('#booking').style.displ
 document.querySelector('#search').addEventListener('click',searchTours);
 document.querySelector('#bookingForm').addEventListener('submit',async e=>{
  e.preventDefault();if(!selected)return;
+ const submitButton=document.querySelector('#bookingForm button[type=submit]');
+ if(submitButton.disabled)return;
+ submitButton.disabled=true;submitButton.textContent='Processing…';
  const payload={tourId:selected.id,guests:Number(document.querySelector('#guests').value),email:document.querySelector('#email').value,paymentScenario:document.querySelector('#paymentScenario').value};
- const res=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
- const data=await res.json();const msg=document.querySelector('#message');
- msg.textContent=res.ok?`Booking ${data.bookingId} ${data.status}. Total ${money(data.subtotal)}. Commission ${money(data.commission)}.`:`Booking failed: ${data.error}`;
- msg.dataset.status=res.ok?'success':'error';
+ try {
+  const res=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':bookingIdempotencyKey},body:JSON.stringify(payload)});
+  const data=await res.json();const msg=document.querySelector('#message');
+  msg.textContent=res.ok?`Booking ${data.bookingId} ${data.status}. Total ${money(data.subtotal)}. Commission ${money(data.commission)}.`:`Booking failed: ${data.error}`;
+  msg.dataset.status=res.ok?'success':'error';
+  if(res.ok) bookingIdempotencyKey=newKey();
+ } catch (error) {
+  const msg=document.querySelector('#message');msg.textContent='Booking request failed. You can retry safely.';msg.dataset.status='error';
+ } finally { submitButton.disabled=false;submitButton.textContent='Confirm booking'; }
 });
 searchTours();
 </script></body></html>
