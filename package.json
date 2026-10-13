@@ -1,0 +1,24 @@
+{
+  "name": "reservex-playwright-qa-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Portfolio demonstration of travel booking QA with Playwright, TypeScript, API checks, and CI.",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:api": "playwright test tests/api",
+    "test:booking": "playwright test tests/ui/booking.spec.ts",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.0"
+  },
+  "dependencies": {
+    "install": "^0.13.0",
+    "npx": "^10.2.2",
+    "playwright": "^1.64.0"
+  }
+}

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ReserveX | Travel QA Demo</title>
+<style>
+:root{font-family:Inter,system-ui,Arial,sans-serif;color:#172033;background:#f4f7fb}
+body{margin:0}.nav{background:#102a43;color:white;padding:18px 7%;font-weight:800;letter-spacing:.4px}
+main{max-width:980px;margin:38px auto;padding:0 20px}.hero{background:#dcecf8;padding:28px;border-radius:18px}
+h1{margin:0 0 8px;font-size:32px}.muted{color:#526579}.search{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+input,select,button{padding:12px;border-radius:8px;border:1px solid #c6d2df;font:inherit}
+button{background:#087e8b;color:white;border:0;font-weight:700;cursor:pointer}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:22px}
+.card{background:white;padding:20px;border-radius:14px;box-shadow:0 4px 16px #102a4310}
+.card h2{font-size:19px}.price{font-size:23px;font-weight:800}.card button{margin-top:12px}
+#booking{background:white;border-radius:14px;padding:22px;margin-top:24px;display:none}
+#booking form{display:grid;gap:12px;max-width:460px}#message{margin-top:15px;font-weight:700}
+.tag{display:inline-block;background:#e4f5ee;color:#176548;border-radius:99px;padding:5px 9px;font-size:12px}
+</style></head>
+<body><div class="nav">ReserveX <span style="font-weight:400">/ QA Demonstration Environment</span></div>
+<main><section class="hero"><h1>Find your next adventure</h1><p class="muted">A controlled sample application for travel-booking quality engineering.</p>
+<div class="search"><input id="destination" placeholder="Destination or tour" aria-label="Destination or tour"><button id="search">Search tours</button></div></section>
+<section id="results" class="cards" aria-live="polite"></section>
+<section id="booking"><h2>Complete your booking</h2><p id="selectedTour"></p><form id="bookingForm">
+<label>Email <input id="email" type="email" required value="traveler@example.com"></label>
+<label>Guests <select id="guests"><option value="1">1 guest</option><option value="2">2 guests</option><option value="3">3 guests</option></select></label>
+<label>Payment scenario <select id="paymentScenario"><option value="success">Simulated success</option><option value="decline">Simulated decline</option></select></label>
+<button type="submit">Confirm booking</button></form><div id="message" role="status"></div></section>
+</main>
+<script>
+let selected = null;
+const money = n => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2}).format(n);
+async function searchTours(){
+ const q=document.querySelector('#destination').value;
+ const res=await fetch('/api/tours?destination='+encodeURIComponent(q));
+ const data=await res.json(); const results=document.querySelector('#results'); results.innerHTML='';
+ data.items.forEach(t=>{
+  const el=document.createElement('article');el.className='card';
+  el.innerHTML=`<span class="tag">${t.days} day${t.days>1?'s':''}</span><h2>${t.title}</h2><p class="muted">${t.destination}</p><p class="price">${money(t.price)} <small>/ guest</small></p><p>${t.available>0?t.available+' spaces available':'Sold out'}</p><button ${t.available===0?'disabled':''} data-id="${t.id}">Select tour</button>`;
+  el.querySelector('button').addEventListener('click',()=>selectTour(t));results.appendChild(el);
+ });
+}
+function selectTour(t){selected=t;document.querySelector('#booking').style.display='block';document.querySelector('#selectedTour').textContent=`${t.title} — ${money(t.price)} per guest`;document.querySelector('#message').textContent='';}
+document.querySelector('#search').addEventListener('click',searchTours);
+document.querySelector('#bookingForm').addEventListener('submit',async e=>{
+ e.preventDefault();if(!selected)return;
+ const payload={tourId:selected.id,guests:Number(document.querySelector('#guests').value),email:document.querySelector('#email').value,paymentScenario:document.querySelector('#paymentScenario').value};
+ const res=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+ const data=await res.json();const msg=document.querySelector('#message');
+ msg.textContent=res.ok?`Booking ${data.bookingId} ${data.status}. Total ${money(data.subtotal)}. Commission ${money(data.commission)}.`:`Booking failed: ${data.error}`;
+ msg.dataset.status=res.ok?'success':'error';
+});
+searchTours();
+</script></body></html>
